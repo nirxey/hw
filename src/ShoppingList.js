@@ -1,20 +1,18 @@
 import React, { Component } from 'react';
 import Members from './Members';
 class ShoppingList extends Component {
-    constructor() {
-        super();
+    constructor(props) {
+        super(props);
         this.state = {
-            listName: 'My Shopping List',
+            listName: '',
             items: [],
-            newItem: '',
             highlightedItems: new Set(),
             itemsForDeletion: [],
             showMembers: false,
-            filter: 'all', 
         };
     }
 
-    
+
 
     addItem = (e) => {
         e.preventDefault();
@@ -26,7 +24,12 @@ class ShoppingList extends Component {
             }));
         }
     };
-
+    goBackToManager = () => {
+        const { history, location } = this.props;
+        history.push('/lists', {
+            shoppingLists: location.state?.shoppingLists || [],
+        });
+    };
     setFilter = (filter) => {
         this.setState({ filter });
     };
@@ -44,8 +47,8 @@ class ShoppingList extends Component {
     removeItem = (index) => {
         const items = this.state.items.filter((_, i) => i !== index);
         this.setState({ items });
-    
-       
+
+
         this.setState((prevState) => ({
             itemsForDeletion: prevState.itemsForDeletion.filter((item) => item !== index),
         }));
@@ -56,41 +59,42 @@ class ShoppingList extends Component {
             this.setState({ listName: newListName });
         }
     };
-    
+
     toggleSelect = (index) => {
         const highlightedItems = new Set(this.state.highlightedItems);
         if (highlightedItems.has(index)) {
-            highlightedItems.delete(index); 
+            highlightedItems.delete(index);
         } else {
-            highlightedItems.add(index); 
+            highlightedItems.add(index);
         }
         this.setState({ highlightedItems });
     };
-    
-addToDeletionList = (index) => {
-    this.setState((prevState) => ({
-        itemsForDeletion: [...prevState.itemsForDeletion, index],
-    }));
-};
+
+    addToDeletionList = (index) => {
+        this.setState((prevState) => ({
+            itemsForDeletion: [...prevState.itemsForDeletion, index],
+        }));
+    };
 
 
 
-render() {
-    const filteredItems = this.getFilteredItems();
+    render() {
+        const filteredItems = this.getFilteredItems();
 
-    return (
-        <div>
-            <h1>{this.state.listName}</h1>
-            <button onClick={this.editListName}>Change the List Name</button>
-            <button onClick={this.openMembers}>View Members</button>
-            <button onClick={() => this.setFilter('highlighted')}>Show Highlighted</button>
+        return (
+            <div>
+              <h1>{this.state.listName}</h1>
+              <button onClick={this.editListName}>Edit List Name</button>
+              <button onClick={this.openMembers}>View Members</button>
+              <button onClick={this.goBackToManager}>Go Back to Shopping List Manager</button>
+                <button onClick={() => this.setFilter('highlighted')}>Show Highlighted</button>
                 <button onClick={() => this.setFilter('notHighlighted')}>Show Not Highlighted</button>
                 <button onClick={() => this.setFilter('all')}>Show All</button>
                 {this.state.showMembers && <Members />}
                 <div className="buttons">
                     <button onClick={this.createList}>Create Another List</button>
                     <button onClick={this.editList}>Edit List</button>
-                    <button onClick={this.deleteList}className="delete-button">Leave List</button>
+
                 </div>
                 <form onSubmit={this.addItem}>
                     <label htmlFor="item">Add an item:</label>
@@ -105,31 +109,41 @@ render() {
                     <button type="submit">Add</button>
                 </form>
                 <ul>
-                    
-    {this.state.items.map((item, index) => (
-        <li key={index} className={this.state.highlightedItems.has(index) ? "highlighted" : ""}>
-            <input
-                type="checkbox"
-                checked={this.state.highlightedItems.has(index)}
-                onChange={() => this.toggleSelect(index)}
-            />
-            {item}
-            <span
-                className="delete"
-                onClick={() => this.addToDeletionList(index)}
-            >
-                   
-            </span>
-        </li>
-    ))}
-</ul>
+
+                    {this.state.items.map((item, index) => (
+                        <li key={index} className={this.state.highlightedItems.has(index) ? "highlighted" : ""}>
+                            <input
+                                type="checkbox"
+                                checked={this.state.highlightedItems.has(index)}
+                                onChange={() => this.toggleSelect(index)}
+                            />
+                            {item}
+                            <span
+                                className="delete"
+                                onClick={() => this.addToDeletionList(index)}
+                            >
+
+                            </span>
+                        </li>
+                    ))}
+                </ul>
 
 
 
             </div>
         );
     }
+    componentDidMount() {
+        const { listId } = this.props.match.params;
+        const shoppingList = this.props.location.state?.shoppingLists.find((list) => list.id === listId);
 
+        if (shoppingList) {
+            this.setState({
+                listName: shoppingList.name,
+                items: shoppingList.items,
+            });
+        }
+    }
 
 
 }
